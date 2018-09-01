@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import Song from './song.model';
+
 export default {
   async create(req, res) {
     try {
@@ -16,7 +17,7 @@ export default {
       if (error && error.details) {
         return res.status(400).json(error);
       }
-      const song = await Song.create(value);
+      const song = await Song.create(Object.assign({}, value, { artist: req.user._id }));
       return res.json(song);
     } catch (err) {
       console.error(err);
@@ -29,6 +30,10 @@ export default {
       const options = {
         page: parseInt(page, 10) || 1,
         limit: parseInt(perPage, 10) || 10,
+        populate: {
+          path: 'artist',
+          select: 'firstName lastName',
+        },
       };
       const songs = await Song.paginate({}, options);
       return res.json(songs);
@@ -40,7 +45,7 @@ export default {
   async findOne(req, res) {
     try {
       const { id } = req.params;
-      const song = await Song.findById(id);
+      const song = await Song.findById(id).populate('artist', 'firstName lastName');
       if (!song) {
         return res.status(404).json({ err: 'could not find song' });
       }

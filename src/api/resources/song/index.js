@@ -1,1 +1,1 @@
-export {songRouter} from './song.router'
+export { songRouter } from './song.router';

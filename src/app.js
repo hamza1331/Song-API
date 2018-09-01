@@ -1,15 +1,29 @@
 import express from 'express';
 import logger from 'morgan';
-import { connect } from "./config/db";
-import { restRoute } from "./index";
-const app = express();
-const PORT = 8080;
+import passport from 'passport';
+import swaggerUi from 'swagger-ui-express';
+import { connect } from './config/db';
+import { restRouter } from './api';
+import swaggerDocument from './config/swagger.json';
+import { configJWTStrategy } from './api/middlewares/passport-jwt';
 
-connect()
-app.use(express.json())
-app.use(express.urlencoded({extended:true}))
+const app = express();
+const PORT = 3000;
+
+connect();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(logger('dev'));
-app.use('/api',restRoute)
+app.use(passport.initialize()); // req.user
+configJWTStrategy();
+app.use('/api', restRouter);
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+  })
+);
 app.use((req, res, next) => {
   const error = new Error('Not found');
   error.message = 'Invalid route';
@@ -26,5 +40,5 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running at PORT: http://localhost:${PORT}`);
+  console.log(`Server is running at PORT http://localhost:${PORT}`);
 });
